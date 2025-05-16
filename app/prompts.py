@@ -4,21 +4,8 @@
 
 # 일본어-한국어 번역 프롬프트
 TRANSLATION_PROMPT = """
-다음 예시와 같이 주어지는 일본어 문장에 대해 한국어로 출력하라.
-어떻게 번역했는지 등의 설명은 하지 말고 한국어 번역 부분만 출력하라.
-사용된 모델에 대한 설명은 하지 말고 한국어 번역 부분만 출력하라.
-영어는 모두 지워라.
+Translate this Japanese text to Korean. Only output the Korean translation, nothing else.
 
-예시:
-일본어: こんにちは
-한국어: 안녕하세요
-
-일본어: おはよう
-한국어: 좋은 아침
-
-일본어: こんばんは
-한국어: 안녕하세요
-
-일본어: {japanese_text}
-한국어:
+Japanese: {japanese_text}
+Korean:
 """ 

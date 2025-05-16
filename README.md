@@ -6,6 +6,114 @@
 - Ollama LLM(gemma2:9b) + GPU 가속
 - Docker Compose로 손쉽게 배포 및 개발환경 구성
 
+## 개발 과정
+
+### 1. 초기 환경 설정
+- FastAPI 프로젝트 구조 설정
+- Docker 및 Docker Compose 환경 구성
+- GPU 지원을 위한 NVIDIA 드라이버 및 CUDA 설정
+
+### 2. 기본 API 구현
+- FastAPI로 `/translate` 엔드포인트 구현
+- Pydantic 모델을 사용한 요청/응답 스키마 정의
+- 로깅 시스템 구축 (날짜별 로그 파일 생성)
+
+### 3. Ollama 통합
+- Ollama Docker 컨테이너 설정
+- gemma2:9b 모델 설치 및 GPU 연동
+- Ollama API 연동 구현
+
+### 4. 주요 문제 해결 과정
+
+#### (1) 포트 충돌 문제
+- **현상:** `Bind for 0.0.0.0:8000 failed: port is already allocated`
+- **원인:** 8000번 포트를 이미 다른 프로세스가 사용 중
+- **해결:** 기존 프로세스 종료 후 재시작
+
+#### (2) Ollama API 응답 문제
+- **현상:** 번역 요청 시 빈 응답 (`{ }`) 반환
+- **원인:** 
+  - `format: "json"` 옵션으로 인한 모델 응답 제한
+  - 불명확한 프롬프트 지시사항
+- **해결:**
+  - JSON 형식 강제 옵션 제거
+  - 한국어 프롬프트로 변경
+  - 시스템 프롬프트 명확화
+
+#### (3) 번역 결과 정제
+- **현상:** 불필요한 텍스트나 중복된 번역 결과
+- **해결:**
+  - `clean_translation` 함수 구현
+  - 한글만 추출하는 정규식 패턴 적용
+  - 중복 문장 제거 로직 추가
+
+### 5. 최종 구현 기능
+- 일본어-한국어 번역 API (`/translate` 엔드포인트)
+- 번역 결과 정제 및 검증
+- 상세한 로깅 시스템
+- 헬스 체크 엔드포인트 (`/health`)
+
+## 사용법
+
+### 1. 환경 요구사항
+- Docker 및 Docker Compose
+- NVIDIA GPU 및 드라이버
+- CUDA 11.8 이상
+
+### 2. 설치 및 실행
+```bash
+# 저장소 클론
+git clone [repository-url]
+cd translator
+
+# Docker 컨테이너 빌드 및 실행
+docker-compose up --build -d
+```
+
+### 3. API 사용 예시
+```bash
+# 번역 API 호출
+curl -X POST "http://localhost:8000/translate" \
+     -H "Content-Type: application/json" \
+     -d '{"japanese_text": "こんにちは、元気ですか？"}'
+```
+
+### 4. API 문서
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## 주요 명령어
+```bash
+# 컨테이너 상태 확인
+docker-compose ps
+
+# 로그 확인
+docker-compose logs -f
+
+# Ollama 모델 목록 확인
+docker exec -it ollama ollama list
+
+# GPU 상태 확인
+docker exec -it ollama nvidia-smi
+```
+
+## 향후 개선 사항
+1. 번역 품질 향상
+   - 프롬프트 최적화
+   - 모델 파라미터 조정
+2. 성능 개선
+   - 캐싱 시스템 도입
+   - 배치 처리 지원
+3. 모니터링 강화
+   - 메트릭 수집
+   - 알림 시스템 구축
+
+## 라이선스
+MIT License
+
+## 기여
+이슈 및 풀 리퀘스트를 통해 기여해주세요.
+
 ---
 
 ## 오늘의 작업 내역 및 문제 해결 과정
@@ -47,26 +155,6 @@
 - **현상:** 코드 변경 시마다 컨테이너를 재시작해야 하는 불편함
 - **해결:**
   - `docker-compose.yml`에 볼륨 마운트 및 Uvicorn `--reload` 옵션 추가로 코드 변경 시 자동 반영
-
----
-
-## 사용법
-
-### 1. 빌드 및 실행
-```bash
-docker-compose up --build -d
-```
-
-### 2. 번역 API 사용 예시
-```bash
-curl -X POST "http://localhost:8000/translate" \
-     -H "Content-Type: application/json" \
-     -d '{"japanese_text": "こんにちは、元気ですか？"}'
-```
-
-### 3. API 문서
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 
